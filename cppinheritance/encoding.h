@@ -434,14 +434,24 @@ private:
 
 class _crypto
 {
+public:
 
+	enum _algo
+	{
+		rsa = 1,
+		aes = 2,
+		trides = 3,
+		des   = 4
+	};
+private:
 	typedef unsigned long size_t;
 	typedef _encoding	  type_t;
 
 	string m_int;
 	string m_key;
-	string m_keypub;
-	string m_keypriv;
+
+	int    m_algo;
+	int    m_scheme;
 	string m_out;
 	string m_error;
 	
@@ -473,42 +483,49 @@ class _crypto
 	}
 
 public:
-	_crypto(){throw std::exception("invalid constructor");}
+
 	~_crypto(){m_int.clear(), m_out.clear();};
 
-	_crypto(const char* data) :m_rsapadding(RSA_NO_PADDING),m_pem(0),m_rsa(0)
+
+	_crypto(int algo = 1, int scheme = RSA_PKCS1_PADDING):m_algo(algo), m_scheme(scheme){;}
+
+	_crypto& data(const char* data) 
 	{
 		m_int.assign(data);
+		return *this;
 	}
 
-	_crypto(const wchar_t* data):m_rsapadding(RSA_NO_PADDING),m_pem(0),m_rsa(0)
+	_crypto& data(const wchar_t* data)
 	{
 		m_int.assign((const char*)data, wcslen(data) * sizeof(wchar_t));
+		return *this;
 	}
 
-	_crypto(const char* data, size_t sz) :m_rsapadding(RSA_NO_PADDING),m_pem(0),m_rsa(0)
+	_crypto& data(const char* data, size_t sz)
 	{
 		m_int.assign((const char*)data, sz);
+		return *this;
 	}
 
-	_crypto(const wchar_t* data, size_t sz) :m_rsapadding(RSA_NO_PADDING),m_pem(0),m_rsa(0)
+	_crypto& data(const wchar_t* data, size_t sz)
 	{
 		m_int.assign((const char*)data, sz * sizeof(wchar_t));
+		return *this;
 	}
 
 
-	_crypto( string& str):m_rsapadding(RSA_NO_PADDING),m_pem(0),m_rsa(0)
+	_crypto& data( string& str)
 	{
 		m_int = str;
+		return *this;
 	}
 
-	_crypto( wstring& str):m_rsapadding(RSA_NO_PADDING),m_pem(0),m_rsa(0)
+	_crypto& data( wstring& str)
 	{
 		m_int.assign((const char*)str.c_str(), str.size() * sizeof(wchar_t));
 	}
 
-
-	_crypto& rsa_en()
+	_crypto& encrypt()
 	{
 		if(m_out.size())
 		{
@@ -516,11 +533,41 @@ public:
 		}
 
 
+		if(m_algo == rsa)
+		{
+			rsa_en();
+		}
+
+		return *this;
+	}
+
+
+	_crypto& decrypt()
+	{
+		if(m_out.size())
+		{
+			m_int = m_out;
+		}
+
+
+		if(m_algo == rsa)
+		{
+			rsa_de();
+		}
+	
+		return *this;
+	}
+
+
+	_crypto& rsa_en()
+	{
+		
+
 		RSA* rsa;
 			
 		if(m_pem)
 		{
-			rsa = createRSA((unsigned char*)m_keypub.c_str(), 1);
+			rsa = createRSA((unsigned char*)m_key.c_str(), 1);
 		}
 
 
@@ -528,7 +575,7 @@ public:
 		m_out.resize(sz);
 
 		
-		int iret = RSA_public_encrypt(m_int.size(),(const unsigned char*)m_int.c_str(),(unsigned char*)m_out.c_str(),rsa,m_rsapadding);
+		int iret = RSA_public_encrypt(m_int.size(),(const unsigned char*)m_int.c_str(),(unsigned char*)m_out.c_str(),rsa,m_scheme);
 
 		if(iret == -1)
 		{
@@ -543,22 +590,19 @@ public:
 	_crypto& rsa_de()
 	{
 
-		if(m_out.size())
-		{
-			m_int = m_out;
-		}
+		
 
 		RSA* rsa;
 		if(m_pem)
 		{
-			rsa = createRSA((unsigned char*)m_keypriv.c_str(), 0);
+			rsa = createRSA((unsigned char*)m_key.c_str(), 0);
 		}
 
 
 		int sz = RSA_size(rsa);
 		m_out.resize(sz);
 
-		int iret = RSA_private_decrypt(m_int.size(),(const unsigned char*)m_int.c_str(),(unsigned char*)m_out.c_str(),rsa,m_rsapadding);
+		int iret = RSA_private_decrypt(m_int.size(),(const unsigned char*)m_int.c_str(),(unsigned char*)m_out.c_str(),rsa,m_scheme);
 		
 		if(iret == -1)
 		{
@@ -570,29 +614,16 @@ public:
 		return *this;
 	}
 
-	_crypto& rsapadding(int padding)
-	{
-		m_rsapadding = padding;
-		return *this;
-	}
 	
-	_crypto& pubkey(const string& key)
+	_crypto& key(const string& key)
 	{
-		m_keypub = key;
+		m_key = key;
 
 		m_pem = 1;
 
 		return *this;
 	}
 
-	_crypto& prikey(const string& key)
-	{
-
-		m_keypriv = key;
-		m_pem = 1;
-
-		return *this;
-	}
 
 
 	string get()
@@ -634,6 +665,21 @@ public:
 
 
 };
+
+
+#ifndef RsaNone
+#define RsaNone _crypto(1,RSA_NO_PADDING)
+#endif
+
+
+#ifndef RsaPkcs1
+#define RsaPkcs1 _crypto(1,RSA_PKCS1_PADDING)
+#endif
+
+
+#ifndef RsaOeap
+#define RsaOeap _crypto(1,RSA_PKCS1_OAEP_PADDING)
+#endif
 
 
 

@@ -42,8 +42,8 @@ int main()
 	char prikey[0x1000];
 	keyfile2.read(prikey, 0x1000);
 
-	string cipher = _encoding(_crypto(a).rsapadding(1).pubkey(pubkey).rsa_en().get()).en_base64().get();//nopadding
-	string  plain = _crypto(cipher).prikey(prikey).rsa_de().get();//nopadding
+	string cipher = RsaPkcs1.data(a).key(pubkey).encrypt().get();//nopadding
+	string  plain = RsaPkcs1.data(cipher).key(prikey).decrypt().get();;//nopadding
 
 
 	CMyPcre::testpcre();
