@@ -615,11 +615,20 @@ public:
 	}
 
 	
-	_crypto& key(const string& key)
+	_crypto& key(const string& key , bool bpem = 1)
 	{
 		m_key = key;
 
-		m_pem = 1;
+		m_pem = bpem;
+
+		return *this;
+	}
+
+	_crypto& key(const char* key, bool bpem = 1)
+	{
+		m_key = key;
+
+		m_pem = bpem;
 
 		return *this;
 	}
