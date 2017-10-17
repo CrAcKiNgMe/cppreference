@@ -29,6 +29,7 @@ public:
 		return m_buffer._Myptr();
 	}
 
+	
 
 
 	size_t size()
@@ -45,6 +46,12 @@ public:
 	const  char* c_str()
 	{
 		return m_buffer.c_str();
+	}
+
+	_xstring& log()
+	{
+		OutputDebugStringA(m_buffer.c_str());
+		return *this;
 	}
 
 	_xstring& append(_xstring& a)
@@ -330,6 +337,12 @@ public:
 		m_buffer.clear();
 	}
 
+
+	_wxstring& log()
+	{
+		OutputDebugStringW(m_buffer.c_str());
+		return *this;
+	}
 
 
 
