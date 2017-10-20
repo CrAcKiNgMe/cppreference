@@ -419,6 +419,8 @@ public:
 		return tmp;
 	}
 
+	
+
 private: 
 
 	string m_int;
@@ -427,6 +429,7 @@ private:
 
 #include <openssl/err.h>
 #include <openssl/rsa.h>
+#include <openssl/aes.h>
 #include <openssl/pem.h>
 
 
@@ -445,7 +448,7 @@ public:
 	};
 private:
 	typedef unsigned long size_t;
-	typedef _encoding	  type_t;
+	typedef _crypto	  type_t;
 
 	string m_int;
 	string m_key;
@@ -467,8 +470,9 @@ private:
 		keybio = BIO_new_mem_buf(key, -1);
 		if (keybio==NULL)
 		{
-			printf( "Failed to create key BIO");
-			return 0;
+			m_error = "Failed to create key BIO";
+			throw *this;
+			
 		}
 		if(pub)
 		{
@@ -479,6 +483,14 @@ private:
 			rsa = PEM_read_bio_RSAPrivateKey(keybio, &rsa,NULL, NULL);
 		}
 
+
+		if(!rsa)
+		{
+			m_error = ERR_error_string(ERR_get_error(), NULL);
+			throw *this;
+		}
+
+
 		return rsa;
 	}
 
@@ -487,7 +499,8 @@ public:
 	~_crypto(){m_int.clear(), m_out.clear();};
 
 
-	_crypto(int algo = 1, int scheme = RSA_PKCS1_PADDING):m_algo(algo), m_scheme(scheme){;}
+	_crypto(int algo = 1, int scheme = RSA_PKCS1_PADDING):m_algo(algo), m_scheme(scheme){ERR_load_RSA_strings();
+	;}
 
 	_crypto& data(const char* data) 
 	{
@@ -581,6 +594,7 @@ public:
 		{
 			ERR_load_RSA_strings();
 			m_error = ERR_error_string(ERR_get_error(), NULL);
+			throw *this;
 
 		}
 
@@ -640,7 +654,7 @@ public:
 		return m_out;
 	}
 
-	string error()
+	string what()
 	{
 		return m_error;
 	}
@@ -690,6 +704,127 @@ public:
 #define RsaOeap _crypto(1,RSA_PKCS1_OAEP_PADDING)
 #endif
 
+
+#include <time.h>
+
+enum
+{
+	__start_of_day = 1,
+	__start_of_week ,
+	__start_of_month,
+	__start_of_year
+
+};
+
+#define tm_cast(x) ((struct tm*)x)
+class _datetime
+{
+public:
+	typedef unsigned long size_t;
+	typedef _datetime	  type_t;
+	time_t  m_time;
+	struct tm  m_tm;
+	string  m_result;
+
+public:
+
+	_datetime()
+	{
+		m_time  = time(NULL); //unix stamp
+		m_tm	= *gmtime(&m_time);
+	}
+
+	_datetime& local()
+	{
+		
+		m_tm = *localtime(&m_time);
+		return *this;
+	};
+
+	operator struct tm*()
+	{
+		return &m_tm;
+	};
+
+
+	_datetime& year(int& tmyear)
+	{
+		tmyear =  m_tm.tm_year + 1900;
+		return *this;
+	}
+
+	_datetime& month(int& tmmonth)
+	{
+		tmmonth =  m_tm.tm_mon;
+		return *this;
+	}
+
+	_datetime& day(int& tmday)
+	{
+		tmday = m_tm.tm_mday;
+		return *this;
+	}
+
+	_datetime& hour(int& tmhour)
+	{
+		tmhour =  m_tm.tm_hour;
+		return *this;
+	}
+
+	_datetime& minute(int& tmmin)
+	{
+		tmmin =  m_tm.tm_min;
+		return *this;
+	}
+
+	_datetime& second(int& tmsecond)
+	{
+		tmsecond =  m_tm.tm_sec;
+		return *this;
+	}
+
+
+
+	_datetime& weekday(int& tmweekday)
+	{
+		tmweekday =  m_tm.tm_wday;
+		return *this;
+	}
+
+
+	_datetime& yearday(int& tmyearday)
+	{
+		tmyearday =  m_tm.tm_yday;
+		return *this;
+	}
+
+
+
+	_datetime& strtime()
+	{
+		m_result.resize(26);
+		asctime_s(m_result._Myptr(), 26, &m_tm);
+
+		return *this;
+	};
+
+
+	const char* cstr()
+	{
+		return m_result.c_str();
+	}
+
+
+
+
+	static void test()
+	{
+		_datetime a;
+		const char* res = a.local().strtime().cstr();
+		int y = tm_cast(a)->tm_year;
+	}
+
+};
 
 
 

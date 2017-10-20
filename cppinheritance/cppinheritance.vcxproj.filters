@@ -21,9 +21,6 @@
     <ClCompile Include="a.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pcre_wapper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="encoding.h">

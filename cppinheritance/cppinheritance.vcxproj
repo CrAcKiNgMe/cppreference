@@ -75,7 +75,6 @@
   <ItemGroup>
     <ClCompile Include="a.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="pcre_wapper.cpp" />
     <ClInclude Include="encoding.h" />
     <ClInclude Include="utities.h" />
     <ClInclude Include="xxstring.h" />

@@ -176,14 +176,21 @@ public:
 		va_list args;
 		va_start(args, fmt);
 
-		size_t sz = vsnprintf_s(NULL, 0, 0, fmt, va);
+		size_t sz = vsnprintf(NULL, 0, fmt, args);
+		tmp._Grow(sz + 1);
 		tmp.resize(sz);
 
-		vsnprintf_s(tmp._Myptr(), tmp.size(), tmp.size(), fmt, va);
+
+
+
+		vsnprintf_s(tmp._Myptr(), tmp.capacity(),_TRUNCATE, fmt, args);
 
 		va_end(args);
 
 		m_buffer = tmp;
+
+
+		return *this;
 	}
 };
 
@@ -349,20 +356,21 @@ public:
 
 	_wxstring& format(const wchar_t* fmt, ...)
 	{
-		std::wstring tmp;
-		va_list va;
-
 		va_list args;
 		va_start(args, fmt);
 
-		size_t sz = vswprintf_s(NULL, 0,  fmt, va);
-		tmp.resize(sz);
+		SetLastError(ERROR_SUCCESS);
+		wchar_t szBuffer[1028];
+		int nLength = _vscwprintf(fmt, args);
 
-		vswprintf_s(tmp._Myptr(), tmp.size(), fmt, va);
+		m_buffer._Grow(nLength+1);
+		m_buffer.resize(nLength);
+
+		vswprintf_s(m_buffer._Myptr(), m_buffer.capacity(), fmt, args);
 
 		va_end(args);
 
-		m_buffer = tmp;
+		return *this;
 	}
 };
 
