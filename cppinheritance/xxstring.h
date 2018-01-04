@@ -1,12 +1,13 @@
-#ifndef _INLCUDE_XSTRING_H
-#define _INLCUDE_XSTRING_H
-
+#pragma  once
 #include <stdio.h>
 #include <varargs.h>
-#include "encoding.h"
+#include <string>
+using namespace std;
 
+namespace std
+{
 
-
+}
 
 
 class _xstring
@@ -378,5 +379,3 @@ typedef _xstring xstring;
 typedef _wxstring wxstring;
 
 
-
-#endif 
