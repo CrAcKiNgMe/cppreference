@@ -538,9 +538,126 @@ private:
 #include <openssl/rsa.h>
 #include <openssl/aes.h>
 #include <openssl/pem.h>
-
-
+#include <openssl/evp.h>
 #pragma  comment(lib, "libeay32.lib")
+
+class _digest
+{
+	typedef _digest _type;
+	string m_algo;
+
+public:
+	_digest(const unsigned char* algo) 
+	{
+		m_algo.assign((const char*)algo);
+	}
+
+	_digest(const  char* d) 
+	{
+		m_algo.assign(d);
+	}
+
+	_digest(const  string& d) 
+	{
+		m_algo = d;
+	}
+
+
+
+	string digest(const unsigned char* msg, size_t msgsize)
+	{
+		const EVP_MD *d;
+		EVP_MD_CTX ctx;
+		unsigned char md[EVP_MAX_MD_SIZE];
+		unsigned int mdn;
+
+		d = EVP_get_digestbyname(m_algo.c_str());
+		if (!d)
+		{
+			return "";
+		}
+
+		//printf("Testing digest %s\n", EVP_MD_name(d));
+
+
+		EVP_MD_CTX_init(&ctx);
+
+
+		if (!EVP_DigestInit_ex(&ctx, d, NULL)) {
+			EVP_MD_CTX_cleanup(&ctx);
+			return "";
+		}
+		if (!EVP_DigestUpdate(&ctx, msg, msgsize)) {
+
+			EVP_MD_CTX_cleanup(&ctx);
+			return "";
+		}
+		if (!EVP_DigestFinal_ex(&ctx, md, &mdn)) {
+
+
+			EVP_MD_CTX_cleanup(&ctx);
+			return "";
+		}
+		EVP_MD_CTX_cleanup(&ctx);
+
+
+
+		string ret;
+		ret.assign((const char*)md,mdn);
+
+		return ret;
+	}
+
+	string digest(const  string& msg)
+	{
+		const EVP_MD *d;
+		EVP_MD_CTX ctx;
+		unsigned char md[EVP_MAX_MD_SIZE];
+		unsigned int mdn;
+
+		d = EVP_get_digestbyname(m_algo.c_str());
+		if (!d)
+		{
+			return "";
+		}
+
+		//printf("Testing digest %s\n", EVP_MD_name(d));
+
+
+		EVP_MD_CTX_init(&ctx);
+
+
+		if (!EVP_DigestInit_ex(&ctx, d, NULL)) {
+			EVP_MD_CTX_cleanup(&ctx);
+			return "";
+		}
+		if (!EVP_DigestUpdate(&ctx, msg.c_str(), msg.size())) {
+
+			EVP_MD_CTX_cleanup(&ctx);
+			return "";
+		}
+		if (!EVP_DigestFinal_ex(&ctx, md, &mdn)) {
+
+
+			EVP_MD_CTX_cleanup(&ctx);
+			return "";
+		}
+		EVP_MD_CTX_cleanup(&ctx);
+
+
+
+		string ret;
+		ret.assign((const char*)md,mdn);
+
+		return ret;
+
+	}
+
+
+	
+
+};
+
 
 class _crypto
 {
@@ -558,7 +675,8 @@ public:
 	{
 		kf_pem = 1,
 		kf_der = 2,
-		kf_hexder = 3
+		kf_hexder = 3,
+		kf_SubjectPublicKeyInfo = 4
 	};
 
 	typedef basic_string<unsigned char, char_traits<unsigned char>, allocator<unsigned char> >
@@ -823,11 +941,16 @@ public:
 		extern unsigned char g_sz_rsa_private[2348];
 
 		RSA* rsa;
-		if(m_keyformat == kf_pem)
+		if(m_keyformat == kf_pem)//pkcs#1 format
 		{
 			rsa = createRSA((unsigned char*)m_key.c_str(), 1);
 		}
-		else if(m_keyformat == kf_der)
+		else if(m_keyformat == kf_der)//pkcs#1 format
+		{
+			const unsigned char * pPublic = (const unsigned char *)m_key._Myptr();
+			rsa = d2i_RSAPublicKey(NULL,  &pPublic, m_key.size() );
+		}
+		else if(m_keyformat == kf_SubjectPublicKeyInfo  )
 		{
 			const unsigned char * pPublic = (const unsigned char *)m_key._Myptr();
 			rsa = d2i_RSA_PUBKEY(&rsa,  &pPublic, m_key.size() );

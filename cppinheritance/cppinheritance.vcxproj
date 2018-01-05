@@ -77,8 +77,8 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClInclude Include="encoding.h" />
-    <ClInclude Include="utities.h" />
     <ClInclude Include="xxstring.h" />
+    <ClInclude Include="_re.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
